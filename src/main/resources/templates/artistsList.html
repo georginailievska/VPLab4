@@ -1,0 +1,39 @@
+<!DOCTYPE html>
+<html lang="en" xmlns:th="http://www.thymeleaf.org">
+<head>
+    <meta charset="UTF-8">
+    <title>Artists List</title>
+    <style type="text/css">
+        body {
+            width: 800px;
+            margin: auto;
+        }
+    </style>
+</head>
+<body>
+<header>
+    <h1>Select an Artist to Add to the Song</h1>
+</header>
+
+<div th:if="${error}" style="color: red;">
+    <p th:text="${error}"></p>
+</div>
+
+<form th:action="@{/artist}" th:method="POST">
+    <main>
+        <h2>Choose an Artist:</h2>
+        <div th:each="artist : ${artists}">
+            <input type="radio" name="artistId" th:value="${artist.id}"
+                   th:text="|Name: ${artist.firstName} ${artist.lastName}, Bio: ${artist.bio}|"
+                   required>
+            <br/>
+        </div>
+        <input type="hidden" name="trackId" th:value="${selectedTrackId}" />
+        <div>
+            <input type="submit" value="Add Artist">
+            <a th:href="@{/songs}">Go to All Songs</a>
+        </div>
+    </main>
+</form>
+</body>
+</html>

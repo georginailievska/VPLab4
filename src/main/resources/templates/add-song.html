@@ -1,0 +1,31 @@
+<!DOCTYPE html>
+<html lang="en" xmlns:th="http://www.thymeleaf.org">
+<head>
+    <meta charset="UTF-8">
+    <title>Add/Edit Song</title>
+    <style type="text/css">
+        body {
+            width: 800px;
+            margin: auto;
+        }
+    </style>
+</head>
+<body>
+<div th:if="${error}" style="color: red;">
+    <p th:text="${error}"></p>
+</div>
+<form th:action="@{/songs}" th:method="POST">
+    <input type="hidden" th:value="${song?.id}" name="id"/>
+    <label>Title: <input type="text" th:value="${song?.title}" name="title" required/></label>
+    <label>Track ID: <input type="text" th:value="${song?.trackId}" name="trackId" required/></label>
+    <label>Genre: <input type="text" th:value="${song?.genre}" name="genre" required/></label>
+    <label>Release Year: <input type="number" th:value="${song?.releaseYear}" name="releaseYear" required/></label>
+    <label>Album:
+        <select name="albumId">
+            <option th:each="album : ${albums}" th:value="${album.id}" th:text="${album.name}"></option>
+        </select>
+    </label>
+    <button type="submit">Save</button>
+</form>
+</body>
+</html>
