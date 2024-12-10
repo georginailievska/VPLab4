@@ -20,13 +20,16 @@ public class ArtistController {
     }
 
     @GetMapping
-    public String getArtistPage(@RequestParam String trackId,
+    public String getArtistPage(@RequestParam(required = false) String trackId,
                                 @RequestParam(required = false) String error,
                                 Model model) {
-        Song selectedSong = songService.findByTrackId(trackId);
+        if (trackId == null || trackId.isEmpty()) {
+            return "redirect:/songs?error=Track ID is required.";
+        }
 
+        Song selectedSong = songService.findByTrackId(trackId);
         if (selectedSong == null) {
-            return "redirect:/songs?error=Song not found";
+            return "redirect:/songs?error=Song not found.";
         }
 
         model.addAttribute("artists", artistService.listArtists());
@@ -37,11 +40,18 @@ public class ArtistController {
     }
 
     @PostMapping
-    public String addArtistToSong(@RequestParam String artistId, @RequestParam String trackId, Model model) {
-        if (artistId == null || trackId == null) {
-            return "redirect:/artist?trackId=" + trackId + "&error=Invalid artist or song selection.";
+    public String addArtistToSong(@RequestParam(required = false) String artistId,
+                                  @RequestParam String trackId,
+                                  Model model) {
+        // Validate input parameters
+        if (trackId == null || trackId.isEmpty()) {
+            return "redirect:/songs?error=Track ID is required.";
+        }
+        if (artistId == null || artistId.isEmpty()) {
+            return "redirect:/artist?trackId=" + trackId + "&error=You must select an artist.";
         }
 
+        // Fetch artist and song objects
         Artist artist = artistService.findById(Long.valueOf(artistId));
         Song song = songService.findByTrackId(trackId);
 
@@ -49,11 +59,15 @@ public class ArtistController {
             return "redirect:/artist?trackId=" + trackId + "&error=Artist or song not found.";
         }
 
+        // Check if the artist is already added to the song
         if (song.getPerformers().stream().anyMatch(a -> a.getId().equals(artist.getId()))) {
             return "redirect:/artist?trackId=" + trackId + "&error=Artist already added.";
         }
 
-        songService.addArtistToSong(artist, song);
-        return "redirect:/songs/details?trackId=" + trackId;
+        // Add the artist to the song
+        song.getPerformers().add(artist); // Update in memory
+        songService.saveSong(song); // Persist the changes
+
+        return "redirect:/songs/details?trackId=" + trackId; // Redirect to song details page
     }
 }

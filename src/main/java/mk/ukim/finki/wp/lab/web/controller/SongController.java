@@ -9,12 +9,14 @@ import org.springframework.ui.Model;
 import org.springframework.web.bind.annotation.*;
 
 import java.util.ArrayList;
+import java.util.List;
 
 @Controller
 @RequestMapping("/songs")
 public class SongController {
     private final SongService songService;
     private final AlbumService albumService;
+    private String selectedAlbumId = null;
 
     public SongController(SongService songService, AlbumService albumService) {
         this.songService = songService;
@@ -22,8 +24,26 @@ public class SongController {
     }
 
     @GetMapping
-    public String getSongsPage(@RequestParam(required = false) String error, Model model) {
-        model.addAttribute("songs", songService.listSongs());
+    public String getSongsPage(@RequestParam(required = false) String albumId,
+                               @RequestParam(required = false) String error,
+                               Model model) {
+        List<Song> songs;
+
+        if (albumId == null && selectedAlbumId != null) {
+            albumId = selectedAlbumId;
+        } else {
+            selectedAlbumId = albumId;
+        }
+
+        if (albumId == null || albumId.equals("null") || albumId.isEmpty()) {
+            songs = songService.listSongs();
+        } else {
+            songs = songService.findSongsByAlbumId(Long.valueOf(albumId));
+        }
+
+        model.addAttribute("songs", songs);
+        model.addAttribute("albums", albumService.findAll());
+        model.addAttribute("selectedAlbumId", selectedAlbumId);
         model.addAttribute("error", error);
         return "listSongs";
     }
@@ -36,38 +56,47 @@ public class SongController {
 
     @GetMapping("/edit-form/{id}")
     public String getEditSongForm(@PathVariable Long id, Model model) {
-        try {
-            Song song = songService.findById(id);
-            model.addAttribute("song", song);
-            model.addAttribute("albums", albumService.findAll());
-            return "add-song";
-        } catch (IllegalArgumentException e) {
-            return "redirect:/songs?error=Song not found";
+        Song song = songService.findById(id);
+        if (song == null) {
+            return "redirect:/songs?error=Song not found.";
         }
+        model.addAttribute("song", song);
+        model.addAttribute("albums", albumService.findAll());
+        return "add-song";
     }
 
     @PostMapping
-    public String saveSong(@RequestParam(required = false) Long id, // Optional ID for update
+    public String saveSong(@RequestParam(required = false) Long id,
                            @RequestParam String title,
                            @RequestParam String trackId,
                            @RequestParam String genre,
                            @RequestParam int releaseYear,
-                           @RequestParam Long albumId,
+                           @RequestParam(required = false) Long albumId, // Album ID is optional
                            Model model) {
+        // Check if albumId is null
+        if (albumId == null) {
+            model.addAttribute("error", "You must select an album.");
+            model.addAttribute("albums", albumService.findAll());
+            if (id != null) {
+                // Populate the song details in case of update
+                model.addAttribute("song", songService.findById(id));
+            }
+            return "add-song";
+        }
+
         Album album = albumService.findAll().stream()
                 .filter(a -> a.getId().equals(albumId))
                 .findFirst()
                 .orElseThrow(() -> new IllegalArgumentException("Album not found"));
 
-        // Check for duplicate trackId when creating a new song
-        if (songService.findByTrackId(trackId) != null) {
+        // Check for duplicate trackId when creating a new song or updating
+        if (songService.findByTrackId(trackId) != null && (id == null || !songService.findByTrackId(trackId).getId().equals(id))) {
             model.addAttribute("error", "A song with the same track ID already exists.");
             model.addAttribute("albums", albumService.findAll());
             if (id != null) {
-                // Redirect to the edit form with the same ID
                 model.addAttribute("song", songService.findById(id));
             }
-            return "add-song"; // Redirect to the add form
+            return "add-song";
         }
 
         if (id != null) {
@@ -76,14 +105,11 @@ public class SongController {
             if (existingSong == null) {
                 return "redirect:/songs?error=Song not found.";
             }
-
-            // Update fields
             existingSong.setTitle(title);
             existingSong.setTrackId(trackId);
             existingSong.setGenre(genre);
             existingSong.setReleaseYear(releaseYear);
             existingSong.setAlbum(album);
-
             songService.saveSong(existingSong);
         } else {
             // Create new song
@@ -101,11 +127,10 @@ public class SongController {
     }
 
     @PostMapping("/select")
-    public String selectSong(@RequestParam String trackId) {
+    public String selectSong(@RequestParam(required = false) String trackId, Model model) {
         if (trackId == null || trackId.isEmpty()) {
-            return "redirect:/songs?error=You must select a song.";
+            return "redirect:/songs?error=You must select a song before proceeding.";
         }
-
         return "redirect:/artist?trackId=" + trackId;
     }
 
@@ -123,4 +148,16 @@ public class SongController {
         model.addAttribute("song", song);
         return "songDetails";
     }
+
+    @GetMapping("/album/{albumId}")
+    public String getSongsByAlbum(@PathVariable Long albumId, Model model) {
+        List<Song> songs = songService.findSongsByAlbumId(albumId);
+        model.addAttribute("songs", songs);
+        model.addAttribute("albumId", albumId);
+        return "listSongs"; // Ensure your listSongs.html supports displaying songs filtered by album
+    }
+
+
+
 }
+

@@ -14,9 +14,28 @@
 <header>
     <h1>Welcome to My Music Store</h1>
 </header>
+
 <a href="/songs/add-form">Add New Song</a>
 
-<form th:action="@{/songs/select}" th:method="POST">
+<!-- Error Message -->
+<div th:if="${error}" style="color: red;">
+    <p th:text="${error}"></p>
+</div>
+
+<!-- Filter Dropdown -->
+<form th:action="@{/songs}" method="get">
+    <label for="albumFilter">Filter by Album:</label>
+    <select id="albumFilter" name="albumId" onchange="this.form.submit()">
+        <option th:value="null" th:text="'All'" th:selected="${selectedAlbumId == 'null' || selectedAlbumId == null}"></option>
+        <option th:each="album : ${albums}"
+                th:value="${album.id}"
+                th:text="${album.name}"
+                th:selected="${album.id.toString() == selectedAlbumId}"></option>
+    </select>
+</form>
+
+<!-- List of Songs -->
+<form th:action="@{/songs/select}" method="POST">
     <h2>Choose a Song:</h2>
     <div th:each="song : ${songs}">
         <input type="radio" name="trackId" th:value="${song.trackId}" required>

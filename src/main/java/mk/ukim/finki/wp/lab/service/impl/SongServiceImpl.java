@@ -7,9 +7,11 @@ import mk.ukim.finki.wp.lab.service.SongService;
 import org.springframework.stereotype.Service;
 
 import java.util.List;
+import java.util.Optional;
 
 @Service
 public class SongServiceImpl implements SongService {
+
     private final SongRepository songRepository;
 
     public SongServiceImpl(SongRepository songRepository) {
@@ -19,12 +21,6 @@ public class SongServiceImpl implements SongService {
     @Override
     public List<Song> listSongs() {
         return songRepository.findAll();
-    }
-
-    @Override
-    public Artist addArtistToSong(Artist artist, Song song) {
-        songRepository.addArtistToSong(artist, song);
-        return artist;
     }
 
     @Override
@@ -46,5 +42,10 @@ public class SongServiceImpl implements SongService {
     public void deleteSong(Long id) {
         songRepository.deleteById(id);
     }
-}
 
+    @Override
+    public List<Song> findSongsByAlbumId(Long albumId) {
+        return songRepository.findAllByAlbum_Id(albumId);
+    }
+
+}

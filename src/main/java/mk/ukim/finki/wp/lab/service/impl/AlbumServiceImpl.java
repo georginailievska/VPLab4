@@ -9,6 +9,7 @@ import java.util.List;
 
 @Service
 public class AlbumServiceImpl implements AlbumService {
+
     private final AlbumRepository albumRepository;
 
     public AlbumServiceImpl(AlbumRepository albumRepository) {
@@ -20,4 +21,3 @@ public class AlbumServiceImpl implements AlbumService {
         return albumRepository.findAll();
     }
 }
-
