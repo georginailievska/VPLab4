@@ -30,7 +30,9 @@
         </div>
         <input type="hidden" name="trackId" th:value="${selectedTrackId}" />
         <div>
-            <input type="submit" value="Add Artist">
+            <th:block sec:authorize="hasRole('ROLE_ADMIN')">
+                <input type="submit" value="Add Artist">
+            </th:block>
             <a th:href="@{/songs}">Go to All Songs</a>
         </div>
     </main>

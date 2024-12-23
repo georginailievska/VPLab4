@@ -41,8 +41,7 @@ public class ArtistController {
 
     @PostMapping
     public String addArtistToSong(@RequestParam(required = false) String artistId,
-                                  @RequestParam String trackId,
-                                  Model model) {
+                                  @RequestParam String trackId) {
         // Validate input parameters
         if (trackId == null || trackId.isEmpty()) {
             return "redirect:/songs?error=Track ID is required.";

@@ -127,7 +127,7 @@ public class SongController {
     }
 
     @PostMapping("/select")
-    public String selectSong(@RequestParam(required = false) String trackId, Model model) {
+    public String selectSong(@RequestParam(required = false) String trackId) {
         if (trackId == null || trackId.isEmpty()) {
             return "redirect:/songs?error=You must select a song before proceeding.";
         }
